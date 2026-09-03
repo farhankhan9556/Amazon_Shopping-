@@ -14,3 +14,4 @@ let r=await fetch(SUPABASE_URL+"/rest/v1/products?select=*&order=created_at.desc
 function render(){let q=search.value.toLowerCase();let a=products.filter(p=>(p.name+" "+(p.category||"")+" "+(p.description||"")).toLowerCase().includes(q));grid.innerHTML=a.length?a.map(p=>'<article class="card"><div class="pic">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'">':'🛍️')+'</div><div class="body"><div class="cat">'+esc(p.category||"Product")+'</div><div class="title">'+esc(p.name)+'</div><div class="desc">'+esc(p.description||"")+'</div><a class="btn" href="'+esc(p.amazon_url)+'" target="_blank" rel="sponsored nofollow noopener">View on Amazon →</a></div></article>').join(""):'<div class="empty">No products found.</div>'}
 search.oninput=render;load();
 </script></body></html>
+
