@@ -7,7 +7,7 @@ body{margin:0;font:16px Arial;background:#f7f7f8;color:#171717}.wrap{max-width:1
 <main class="wrap"><input id="search" class="search" placeholder="Search products..."><section id="grid" class="grid"><div class="empty">Loading...</div></section>
 <p class="notice">As an Amazon Associate, we may earn from qualifying purchases. Product availability, pricing and details are determined by Amazon.</p></main>
 <script>
-const SUPABASE_URL="YOUR_SUPABASE_URL",SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY";let products=[];
+const SUPABASE_URL="https://cxjnyymgctrgcyhnsdpk.supabase.co",SUPABASE_ANON_KEY="sb_publishable_amSzXni2yDgCdJE2sH-ddw_SpPdWwBS";let products=[];
 const esc=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 async function load(){if(SUPABASE_URL.startsWith("YOUR_")){grid.innerHTML='<div class="empty">Setup required: add your Supabase URL and anon key.</div>';return}
 let r=await fetch(SUPABASE_URL+"/rest/v1/products?select=*&order=created_at.desc",{headers:{apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY}});if(!r.ok){grid.innerHTML='<div class="empty">Unable to load products.</div>';return}products=await r.json();render()}
