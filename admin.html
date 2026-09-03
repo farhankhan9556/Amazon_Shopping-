@@ -1,20 +1,972 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Admin</title>
-<style>body{margin:0;font:16px Arial;background:#f5f6f8;color:#111827}.wrap{max-width:900px;margin:auto;padding:20px}.box{background:white;border:1px solid #ddd;border-radius:15px;padding:20px;margin-bottom:18px}input,textarea{width:100%;padding:12px;border:1px solid #ddd;border-radius:9px;box-sizing:border-box;margin:6px 0}.btn{border:0;border-radius:9px;padding:11px 15px;background:#111827;color:#fff;font-weight:bold;cursor:pointer}.orange{background:#ff9900;color:#111}.danger{background:#fee2e2;color:#991b1b}.item{display:flex;justify-content:space-between;gap:10px;padding:14px 0;border-bottom:1px solid #eee}.small{color:#777;font-size:13px}@media(max-width:600px){.item{flex-direction:column}}</style></head><body><div class="wrap">
-<h1>Private Product Admin</h1><div id="status" class="box">Checking login...</div><div id="app" style="display:none">
-<div class="box"><h2 id="ft">Add product</h2><input id="name" placeholder="Product name"><input id="category" placeholder="Category"><input id="image" placeholder="Product image URL"><input id="amazon" placeholder="Your Amazon Associates affiliate URL"><textarea id="desc" placeholder="Short description"></textarea><button class="btn orange" onclick="saveProduct()">Save</button> <button class="btn" onclick="resetForm()">Cancel</button></div>
-<div class="box"><h2>Your products</h2><div id="list"></div></div></div></div>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Private Product Admin</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f6f8;
+  color: #111827;
+}
+
+.wrap {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+.box {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  padding: 20px;
+  margin-bottom: 18px;
+}
+
+h1 {
+  margin-top: 0;
+}
+
+input,
+textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  margin: 6px 0;
+  font: inherit;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+button {
+  border: 0;
+  border-radius: 9px;
+  padding: 11px 15px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn {
+  background: #111827;
+  color: #fff;
+}
+
+.orange {
+  background: #ff9900;
+  color: #111;
+}
+
+.danger {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.logout {
+  float: right;
+  background: #eee;
+  color: #111;
+}
+
+.small {
+  color: #777;
+  font-size: 13px;
+}
+
+.error {
+  color: #b91c1c;
+}
+
+.success {
+  color: #166534;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  padding: 15px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.item:last-child {
+  border-bottom: 0;
+}
+
+.actions {
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .item {
+    flex-direction: column;
+  }
+
+  .actions {
+    white-space: normal;
+  }
+
+  .logout {
+    float: none;
+    margin-top: 10px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="wrap">
+
+  <h1>Private Product Admin</h1>
+
+  <!-- LOGIN / STATUS -->
+  <div id="statusBox" class="box">
+    <p id="statusMessage">Checking login...</p>
+  </div>
+
+  <!-- ADMIN APPLICATION -->
+  <div id="adminApp" style="display:none;">
+
+    <div class="box">
+
+      <button id="logoutButton" class="logout">
+        Log out
+      </button>
+
+      <h2 id="formTitle">Add Product</h2>
+
+      <input
+        id="productName"
+        type="text"
+        placeholder="Product name"
+      >
+
+      <input
+        id="productCategory"
+        type="text"
+        placeholder="Category"
+      >
+
+      <input
+        id="productImage"
+        type="url"
+        placeholder="Product image URL"
+      >
+
+      <input
+        id="amazonUrl"
+        type="url"
+        placeholder="Your Amazon Associates affiliate URL"
+      >
+
+      <textarea
+        id="productDescription"
+        placeholder="Short product description"
+      ></textarea>
+
+      <button id="saveButton" class="orange">
+        Save Product
+      </button>
+
+      <button id="cancelButton" class="btn">
+        Cancel
+      </button>
+
+      <p id="formMessage" class="small"></p>
+
+    </div>
+
+    <div class="box">
+
+      <h2>Your Products</h2>
+
+      <div id="productList">
+        Loading products...
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
 <script>
-const SUPABASE_URL="https://cxjnyymgctrgcyhnsdpk.supabase.co",SUPABASE_ANON_KEY="sb_publishable_amSzXni2yDgCdJE2sH-ddw_SpPdWwBS";let token="",editing=null,products=[];
-const esc=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
-async function api(path,opt={}){return fetch(SUPABASE_URL+path,{...opt,headers:{apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+token,"Content-Type":"application/json",...(opt.headers||{})}})}
-function loginUI(){status.innerHTML='<h2>Admin login</h2><p class="small">Only your Supabase admin account should be used here.</p><input id="email" placeholder="Email"><input id="pw" type="password" placeholder="Password"><button class="btn" onclick="login()">Log in</button>'}
-async function login(){let r=await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{apikey:SUPABASE_ANON_KEY,"Content-Type":"application/json"},body:JSON.stringify({email:email.value,password:pw.value})});let d=await r.json();if(!r.ok){alert(d.error_description||"Login failed");return}token=d.access_token;localStorage.setItem("sb_token",token);start()}
-async function start(){if(SUPABASE_URL.startsWith("YOUR_")){status.textContent="Setup required: add your Supabase URL and anon key.";return}token=localStorage.getItem("sb_token")||"";if(!token){loginUI();return}let r=await api("/auth/v1/user");if(!r.ok){localStorage.removeItem("sb_token");token="";loginUI();return}status.style.display="none";app.style.display="block";load()}
-async function load(){let r=await api("/rest/v1/products?select=*&order=created_at.desc");products=await r.json();render()}
-function render(){list.innerHTML=products.length?products.map(p=>'<div class="item"><div><b>'+esc(p.name)+'</b><div class="small">'+esc(p.category||"")+'</div></div><div><button class="btn" onclick="editP(\''+p.id+'\')">Edit</button> <button class="btn danger" onclick="delP(\''+p.id+'\')">Delete</button></div></div>').join(""):'<p class="small">No products yet.</p>'}
-function editP(id){let p=products.find(x=>x.id===id);editing=id;name.value=p.name;category.value=p.category||"";image.value=p.image_url||"";amazon.value=p.amazon_url;desc.value=p.description||"";ft.textContent="Edit product"}
-function resetForm(){editing=null;name.value=category.value=image.value=amazon.value=desc.value="";ft.textContent="Add product"}
-async function saveProduct(){let b={name:name.value.trim(),category:category.value.trim(),image_url:image.value.trim(),amazon_url:amazon.value.trim(),description:desc.value.trim()};if(!b.name||!b.amazon_url){alert("Name and Amazon link are required.");return}let r=await api(editing?"/rest/v1/products?id=eq."+editing:"/rest/v1/products",{method:editing?"PATCH":"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(b)});if(!r.ok){alert(await r.text());return}resetForm();load()}
-async function delP(id){if(!confirm("Delete this product?"))return;let r=await api("/rest/v1/products?id=eq."+id,{method:"DELETE"});if(!r.ok)alert(await r.text());else load()}
-window.addEventListener("DOMContentLoaded", start);
-</script></body></html>
+
+/* =========================================================
+   SUPABASE CONFIGURATION
+   ========================================================= */
+
+const SUPABASE_URL =
+  "https://cxjnyymgctrgcyhnsdpk.supabase.co";
+
+const SUPABASE_ANON_KEY =
+  "sb_publishable_amSzXni2yDgCdJE2sH-ddw_SpPdWwBS";
+
+
+/* =========================================================
+   PAGE ELEMENTS
+   ========================================================= */
+
+const statusBox =
+  document.getElementById("statusBox");
+
+const statusMessage =
+  document.getElementById("statusMessage");
+
+const adminApp =
+  document.getElementById("adminApp");
+
+const productName =
+  document.getElementById("productName");
+
+const productCategory =
+  document.getElementById("productCategory");
+
+const productImage =
+  document.getElementById("productImage");
+
+const amazonUrl =
+  document.getElementById("amazonUrl");
+
+const productDescription =
+  document.getElementById("productDescription");
+
+const productList =
+  document.getElementById("productList");
+
+const formTitle =
+  document.getElementById("formTitle");
+
+const formMessage =
+  document.getElementById("formMessage");
+
+const saveButton =
+  document.getElementById("saveButton");
+
+const cancelButton =
+  document.getElementById("cancelButton");
+
+const logoutButton =
+  document.getElementById("logoutButton");
+
+
+/* =========================================================
+   VARIABLES
+   ========================================================= */
+
+let accessToken = "";
+let editingProductId = null;
+let products = [];
+
+
+/* =========================================================
+   ESCAPE HTML
+   ========================================================= */
+
+function escapeHtml(value) {
+
+  return String(value || "")
+    .replace(/[&<>"']/g, function(character) {
+
+      const entities = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      };
+
+      return entities[character];
+    });
+}
+
+
+/* =========================================================
+   SUPABASE API
+   ========================================================= */
+
+async function supabaseRequest(path, options = {}) {
+
+  const headers = {
+    "apikey": SUPABASE_ANON_KEY,
+    "Authorization": "Bearer " + accessToken,
+    "Content-Type": "application/json",
+    ...(options.headers || {})
+  };
+
+  return fetch(
+    SUPABASE_URL + path,
+    {
+      ...options,
+      headers: headers
+    }
+  );
+}
+
+
+/* =========================================================
+   SHOW LOGIN
+   ========================================================= */
+
+function showLogin() {
+
+  statusBox.innerHTML = `
+    <h2>Admin Login</h2>
+
+    <p class="small">
+      Sign in using your Supabase admin account.
+    </p>
+
+    <input
+      id="loginEmail"
+      type="email"
+      placeholder="Email"
+      autocomplete="email"
+    >
+
+    <input
+      id="loginPassword"
+      type="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
+
+    <button id="loginButton" class="btn">
+      Log in
+    </button>
+
+    <p id="loginMessage" class="small"></p>
+  `;
+
+  document
+    .getElementById("loginButton")
+    .addEventListener("click", login);
+
+}
+
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+async function login() {
+
+  const email =
+    document.getElementById("loginEmail").value.trim();
+
+  const password =
+    document.getElementById("loginPassword").value;
+
+  const loginMessage =
+    document.getElementById("loginMessage");
+
+  if (!email || !password) {
+
+    loginMessage.textContent =
+      "Please enter your email and password.";
+
+    loginMessage.className =
+      "small error";
+
+    return;
+  }
+
+  loginMessage.textContent =
+    "Logging in...";
+
+  loginMessage.className =
+    "small";
+
+
+  try {
+
+    const response = await fetch(
+      SUPABASE_URL +
+      "/auth/v1/token?grant_type=password",
+      {
+        method: "POST",
+
+        headers: {
+          "apikey": SUPABASE_ANON_KEY,
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      }
+    );
+
+
+    const data = await response.json();
+
+
+    if (!response.ok) {
+
+      loginMessage.textContent =
+        data.error_description ||
+        data.msg ||
+        "Login failed.";
+
+      loginMessage.className =
+        "small error";
+
+      return;
+    }
+
+
+    if (!data.access_token) {
+
+      loginMessage.textContent =
+        "Login failed: no access token received.";
+
+      loginMessage.className =
+        "small error";
+
+      return;
+    }
+
+
+    accessToken =
+      data.access_token;
+
+
+    localStorage.setItem(
+      "amazon_admin_token",
+      accessToken
+    );
+
+
+    await checkLogin();
+
+  } catch (error) {
+
+    loginMessage.textContent =
+      "Connection error: " + error.message;
+
+    loginMessage.className =
+      "small error";
+  }
+}
+
+
+/* =========================================================
+   CHECK LOGIN
+   ========================================================= */
+
+async function checkLogin() {
+
+  accessToken =
+    localStorage.getItem(
+      "amazon_admin_token"
+    ) || "";
+
+
+  if (!accessToken) {
+
+    showLogin();
+
+    return;
+  }
+
+
+  try {
+
+    const response =
+      await supabaseRequest(
+        "/auth/v1/user"
+      );
+
+
+    if (!response.ok) {
+
+      localStorage.removeItem(
+        "amazon_admin_token"
+      );
+
+      accessToken = "";
+
+      showLogin();
+
+      return;
+    }
+
+
+    statusBox.style.display = "none";
+
+    adminApp.style.display = "block";
+
+    await loadProducts();
+
+  } catch (error) {
+
+    statusBox.innerHTML = `
+      <h2>Connection Error</h2>
+      <p class="error">
+        ${escapeHtml(error.message)}
+      </p>
+      <button id="retryButton" class="btn">
+        Try Again
+      </button>
+    `;
+
+    document
+      .getElementById("retryButton")
+      .addEventListener(
+        "click",
+        checkLogin
+      );
+  }
+}
+
+
+/* =========================================================
+   LOAD PRODUCTS
+   ========================================================= */
+
+async function loadProducts() {
+
+  productList.innerHTML =
+    "Loading products...";
+
+
+  try {
+
+    const response =
+      await supabaseRequest(
+        "/rest/v1/products?select=*&order=created_at.desc"
+      );
+
+
+    if (!response.ok) {
+
+      const errorText =
+        await response.text();
+
+      productList.innerHTML = `
+        <p class="error">
+          Could not load products.
+        </p>
+        <p class="small">
+          ${escapeHtml(errorText)}
+        </p>
+      `;
+
+      return;
+    }
+
+
+    products =
+      await response.json();
+
+
+    renderProducts();
+
+  } catch (error) {
+
+    productList.innerHTML = `
+      <p class="error">
+        ${escapeHtml(error.message)}
+      </p>
+    `;
+  }
+}
+
+
+/* =========================================================
+   DISPLAY PRODUCTS
+   ========================================================= */
+
+function renderProducts() {
+
+  if (!products.length) {
+
+    productList.innerHTML =
+      '<p class="small">No products yet. Add your first product above.</p>';
+
+    return;
+  }
+
+
+  productList.innerHTML =
+    products.map(function(product) {
+
+      return `
+        <div class="item">
+
+          <div>
+            <b>
+              ${escapeHtml(product.name)}
+            </b>
+
+            <div class="small">
+              ${escapeHtml(product.category || "")}
+            </div>
+          </div>
+
+          <div class="actions">
+
+            <button
+              class="btn"
+              onclick="editProduct('${product.id}')"
+            >
+              Edit
+            </button>
+
+            <button
+              class="danger"
+              onclick="deleteProduct('${product.id}')"
+            >
+              Delete
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+    }).join("");
+}
+
+
+/* =========================================================
+   EDIT PRODUCT
+   ========================================================= */
+
+function editProduct(id) {
+
+  const product =
+    products.find(function(item) {
+
+      return item.id === id;
+
+    });
+
+
+  if (!product) {
+
+    return;
+  }
+
+
+  editingProductId =
+    product.id;
+
+
+  productName.value =
+    product.name || "";
+
+  productCategory.value =
+    product.category || "";
+
+  productImage.value =
+    product.image_url || "";
+
+  amazonUrl.value =
+    product.amazon_url || "";
+
+  productDescription.value =
+    product.description || "";
+
+
+  formTitle.textContent =
+    "Edit Product";
+
+  saveButton.textContent =
+    "Update Product";
+
+  formMessage.textContent =
+    "";
+}
+
+
+/* =========================================================
+   RESET FORM
+   ========================================================= */
+
+function resetForm() {
+
+  editingProductId = null;
+
+  productName.value = "";
+  productCategory.value = "";
+  productImage.value = "";
+  amazonUrl.value = "";
+  productDescription.value = "";
+
+  formTitle.textContent =
+    "Add Product";
+
+  saveButton.textContent =
+    "Save Product";
+
+  formMessage.textContent =
+    "";
+}
+
+
+/* =========================================================
+   SAVE PRODUCT
+   ========================================================= */
+
+async function saveProduct() {
+
+  const product = {
+
+    name:
+      productName.value.trim(),
+
+    category:
+      productCategory.value.trim(),
+
+    image_url:
+      productImage.value.trim(),
+
+    amazon_url:
+      amazonUrl.value.trim(),
+
+    description:
+      productDescription.value.trim()
+  };
+
+
+  if (!product.name) {
+
+    formMessage.textContent =
+      "Product name is required.";
+
+    formMessage.className =
+      "small error";
+
+    return;
+  }
+
+
+  if (!product.amazon_url) {
+
+    formMessage.textContent =
+      "Amazon affiliate URL is required.";
+
+    formMessage.className =
+      "small error";
+
+    return;
+  }
+
+
+  saveButton.disabled = true;
+
+  formMessage.textContent =
+    editingProductId
+      ? "Updating product..."
+      : "Adding product...";
+
+  formMessage.className =
+    "small";
+
+
+  try {
+
+    let response;
+
+
+    if (editingProductId) {
+
+      response =
+        await supabaseRequest(
+          "/rest/v1/products?id=eq." +
+          encodeURIComponent(
+            editingProductId
+          ),
+          {
+            method: "PATCH",
+
+            headers: {
+              "Prefer":
+                "return=representation"
+            },
+
+            body:
+              JSON.stringify(product)
+          }
+        );
+
+    } else {
+
+      response =
+        await supabaseRequest(
+          "/rest/v1/products",
+          {
+            method: "POST",
+
+            headers: {
+              "Prefer":
+                "return=representation"
+            },
+
+            body:
+              JSON.stringify(product)
+          }
+        );
+    }
+
+
+    if (!response.ok) {
+
+      const errorText =
+        await response.text();
+
+      formMessage.textContent =
+        errorText;
+
+      formMessage.className =
+        "small error";
+
+      return;
+    }
+
+
+    formMessage.textContent =
+      editingProductId
+        ? "Product updated successfully."
+        : "Product added successfully.";
+
+    formMessage.className =
+      "small success";
+
+
+    resetForm();
+
+    await loadProducts();
+
+  } catch (error) {
+
+    formMessage.textContent =
+      "Error: " + error.message;
+
+    formMessage.className =
+      "small error";
+
+  } finally {
+
+    saveButton.disabled = false;
+  }
+}
+
+
+/* =========================================================
+   DELETE PRODUCT
+   ========================================================= */
+
+async function deleteProduct(id) {
+
+  if (!confirm("Delete this product?")) {
+
+    return;
+  }
+
+
+  try {
+
+    const response =
+      await supabaseRequest(
+        "/rest/v1/products?id=eq." +
+        encodeURIComponent(id),
+        {
+          method: "DELETE"
+        }
+      );
+
+
+    if (!response.ok) {
+
+      const errorText =
+        await response.text();
+
+      alert(
+        "Delete failed:\n\n" +
+        errorText
+      );
+
+      return;
+    }
+
+
+    await loadProducts();
+
+  } catch (error) {
+
+    alert(
+      "Delete error:\n\n" +
+      error.message
+    );
+  }
+}
+
+
+/* =========================================================
+   LOGOUT
+   ========================================================= */
+
+function logout() {
+
+  localStorage.removeItem(
+    "amazon_admin_token"
+  );
+
+  accessToken = "";
+
+  editingProductId = null;
+
+  adminApp.style.display = "none";
+
+  statusBox.style.display = "block";
+
+  showLogin();
+}
+
+
+/* =========================================================
+   BUTTON EVENTS
+   ========================================================= */
+
+saveButton.addEventListener(
+  "click",
+  saveProduct
+);
+
+cancelButton.addEventListener(
+  "click",
+  resetForm
+);
+
+logoutButton.addEventListener(
+  "click",
+  logout
+);
+
+
+/* =========================================================
+   START
+   ========================================================= */
+
+checkLogin();
+
+</script>
+
+</body>
+</html>
