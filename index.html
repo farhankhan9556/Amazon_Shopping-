@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shop Picks | Recommended Products</title>
+<meta name="description" content="Products recommended from our YouTube channel. Shop on Amazon through our affiliate links.">
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--text:#111827;--muted:#6b7280;--brand:#111827;--accent:#ff9900;--border:#e5e7eb}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--text)}
+header{background:linear-gradient(135deg,#111827,#374151);color:#fff;padding:42px 20px 34px}
+.wrap{max-width:1100px;margin:auto}.brand{display:flex;align-items:center;gap:12px}.logo{width:48px;height:48px;border-radius:14px;background:#fff;color:#111827;display:grid;place-items:center;font-weight:800;font-size:20px}.brand h1{font-size:22px;margin:0}.brand p{margin:4px 0 0;color:#d1d5db;font-size:13px}
+.hero{padding:34px 0 8px}.hero h2{font-size:38px;line-height:1.1;margin:0 0 10px}.hero p{color:#d1d5db;max-width:650px;margin:0}
+.controls{display:flex;gap:10px;flex-wrap:wrap;margin:26px 0}.search{flex:1;min-width:220px;padding:14px 16px;border:1px solid var(--border);border-radius:12px;font-size:15px}.categories{display:flex;gap:8px;flex-wrap:wrap}.cat{border:1px solid var(--border);background:#fff;padding:10px 14px;border-radius:999px;cursor:pointer}.cat.active{background:#111827;color:#fff}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.card{background:var(--card);border:1px solid var(--border);border-radius:18px;overflow:hidden;box-shadow:0 4px 16px rgba(17,24,39,.05);display:flex;flex-direction:column}.pic{height:210px;background:#f3f4f6;display:grid;place-items:center;overflow:hidden}.pic img{width:100%;height:100%;object-fit:contain}.placeholder{font-size:50px;color:#9ca3af}.body{padding:16px;display:flex;flex-direction:column;gap:9px;flex:1}.tag{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#6b7280}.title{font-weight:700;font-size:17px}.desc{font-size:13px;color:var(--muted);line-height:1.45;flex:1}.btn{display:block;text-align:center;background:var(--accent);color:#111;text-decoration:none;font-weight:800;padding:12px;border-radius:10px;margin-top:5px}.btn:hover{filter:brightness(.95)}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);grid-column:1/-1}.notice{font-size:12px;color:#6b7280;text-align:center;margin:30px 0 50px}.admin{margin:0 0 60px;background:#fff;border:1px solid var(--border);border-radius:18px;padding:22px}.admin h3{margin-top:0}.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.formgrid input,.formgrid textarea,.formgrid select{width:100%;padding:11px;border:1px solid var(--border);border-radius:9px;font:inherit}.formgrid textarea{min-height:80px}.full{grid-column:1/-1}.admin-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}.darkbtn,.danger{border:0;padding:11px 15px;border-radius:9px;cursor:pointer;font-weight:700}.darkbtn{background:#111827;color:#fff}.danger{background:#fee2e2;color:#991b1b}
+footer{background:#111827;color:#d1d5db;padding:28px 20px;font-size:12px}.footerin{max-width:1100px;margin:auto;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.hero h2{font-size:30px}.grid{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.full{grid-column:auto}.pic{height:230px}}
+</style>
+</head>
+<body>
+<header>
+<div class="wrap">
+  <div class="brand"><div class="logo">SP</div><div><h1 id="siteName">Shop Picks</h1><p>Products featured on our YouTube channel</p></div></div>
+  <div class="hero"><h2>My Recommended Products</h2><p>Discover the products featured in our videos. Tap any product to see it on Amazon.</p></div>
+</div>
+</header>
+
+<main class="wrap">
+  <div class="controls">
+    <input id="search" class="search" placeholder="Search products...">
+    <div id="categories" class="categories"></div>
+  </div>
+  <section id="grid" class="grid"></section>
+
+  <section class="admin">
+    <h3>Product Manager</h3>
+    <p style="color:#6b7280;font-size:13px">This demo stores products in this browser only. For a live multi-device admin panel, connect the site to a database/CMS.</p>
+    <div class="formgrid">
+      <input id="name" placeholder="Product name">
+      <input id="category" placeholder="Category">
+      <input id="image" placeholder="Product image URL">
+      <input id="amazon" placeholder="Your Amazon Associates link">
+      <textarea id="desc" class="full" placeholder="Short description"></textarea>
+    </div>
+    <div class="admin-actions">
+      <button class="darkbtn" onclick="addProduct()">Add Product</button>
+      <button class="darkbtn" onclick="exportProducts()">Export products</button>
+      <button class="darkbtn" onclick="document.getElementById('importFile').click()">Import products</button>
+      <button class="danger" onclick="clearProducts()">Clear all</button>
+      <input id="importFile" type="file" accept=".json" hidden onchange="importProducts(event)">
+    </div>
+  </section>
+  <p class="notice">As an Amazon Associate, we may earn from qualifying purchases. Product availability, pricing and details are determined by Amazon. Always check the Amazon listing before purchasing.</p>
+</main>
+
+<footer><div class="footerin"><span>© <span id="year"></span> Shop Picks</span><span>Amazon affiliate links • No payment is collected on this website</span></div></footer>
+
+<script>
+const defaultProducts = [
+ {id:1,name:"Featured Product 1",category:"Featured",image:"",amazon:"https://www.amazon.com/",desc:"Replace this with your product and your Amazon Associates tracking link."},
+ {id:2,name:"Featured Product 2",category:"Featured",image:"",amazon:"https://www.amazon.com/",desc:"Add products from your YouTube videos using the Product Manager below."}
+];
+let products = JSON.parse(localStorage.getItem("affiliateProducts") || "null") || defaultProducts;
+let active="All";
+
+function save(){localStorage.setItem("affiliateProducts",JSON.stringify(products));render();}
+function render(){
+ const q=document.getElementById("search").value.toLowerCase().trim();
+ const cats=["All",...new Set(products.map(p=>p.category).filter(Boolean))];
+ document.getElementById("categories").innerHTML=cats.map(c=>`<button class="cat ${c===active?'active':''}" onclick="setCat(${JSON.stringify(c)})">${esc(c)}</button>`).join("");
+ const shown=products.filter(p=>(active==="All"||p.category===active)&&(!q||(p.name+" "+p.category+" "+p.desc).toLowerCase().includes(q)));
+ document.getElementById("grid").innerHTML=shown.length?shown.map(p=>`
+ <article class="card">
+  <div class="pic">${p.image?`<img src="${escAttr(p.image)}" alt="${escAttr(p.name)}" loading="lazy">`:`<div class="placeholder">🛍️</div>`}</div>
+  <div class="body"><div class="tag">${esc(p.category||"Product")}</div><div class="title">${esc(p.name)}</div><div class="desc">${esc(p.desc||"")}</div><a class="btn" href="${escAttr(p.amazon)}" target="_blank" rel="sponsored nofollow noopener">View on Amazon →</a></div>
+ </article>`).join(""):`<div class="empty">No products found.</div>`;
+}
+function setCat(c){active=c;render()}
+function addProduct(){
+ const name=document.getElementById("name").value.trim(), category=document.getElementById("category").value.trim()||"Featured", image=document.getElementById("image").value.trim(), amazon=document.getElementById("amazon").value.trim(), desc=document.getElementById("desc").value.trim();
+ if(!name||!amazon){alert("Product name and Amazon affiliate link are required.");return}
+ products.unshift({id:Date.now(),name,category,image,amazon,desc});["name","category","image","amazon","desc"].forEach(x=>document.getElementById(x).value="");save();
+}
+function exportProducts(){const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(products,null,2)],{type:"application/json"}));a.download="products.json";a.click();}
+function importProducts(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{products=JSON.parse(r.result);save();}catch{alert("Invalid JSON file.")}};r.readAsText(f)}
+function clearProducts(){if(confirm("Remove all products from this browser?")){products=[];save()}}
+function esc(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function escAttr(s){return esc(s)}
+document.getElementById("search").addEventListener("input",render);
+document.getElementById("year").textContent=new Date().getFullYear(); render();
+</script>
+</body>
+</html>
