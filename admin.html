@@ -4,7 +4,7 @@
 <div class="box"><h2 id="ft">Add product</h2><input id="name" placeholder="Product name"><input id="category" placeholder="Category"><input id="image" placeholder="Product image URL"><input id="amazon" placeholder="Your Amazon Associates affiliate URL"><textarea id="desc" placeholder="Short description"></textarea><button class="btn orange" onclick="saveProduct()">Save</button> <button class="btn" onclick="resetForm()">Cancel</button></div>
 <div class="box"><h2>Your products</h2><div id="list"></div></div></div></div>
 <script>
-const SUPABASE_URL="Yhttps://cxjnyymgctrgcyhnsdpk.supabase.co",SUPABASE_ANON_KEY="sb_publishable_amSzXni2yDgCdJE2sH-ddw_SpPdWwBS";let token="",editing=null,products=[];
+const SUPABASE_URL="https://cxjnyymgctrgcyhnsdpk.supabase.co",SUPABASE_ANON_KEY="sb_publishable_amSzXni2yDgCdJE2sH-ddw_SpPdWwBS";let token="",editing=null,products=[];
 const esc=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
 async function api(path,opt={}){return fetch(SUPABASE_URL+path,{...opt,headers:{apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+token,"Content-Type":"application/json",...(opt.headers||{})}})}
 function loginUI(){status.innerHTML='<h2>Admin login</h2><p class="small">Only your Supabase admin account should be used here.</p><input id="email" placeholder="Email"><input id="pw" type="password" placeholder="Password"><button class="btn" onclick="login()">Log in</button>'}
