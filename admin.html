@@ -16,5 +16,5 @@ function editP(id){let p=products.find(x=>x.id===id);editing=id;name.value=p.nam
 function resetForm(){editing=null;name.value=category.value=image.value=amazon.value=desc.value="";ft.textContent="Add product"}
 async function saveProduct(){let b={name:name.value.trim(),category:category.value.trim(),image_url:image.value.trim(),amazon_url:amazon.value.trim(),description:desc.value.trim()};if(!b.name||!b.amazon_url){alert("Name and Amazon link are required.");return}let r=await api(editing?"/rest/v1/products?id=eq."+editing:"/rest/v1/products",{method:editing?"PATCH":"POST",headers:{Prefer:"return=representation"},body:JSON.stringify(b)});if(!r.ok){alert(await r.text());return}resetForm();load()}
 async function delP(id){if(!confirm("Delete this product?"))return;let r=await api("/rest/v1/products?id=eq."+id,{method:"DELETE"});if(!r.ok)alert(await r.text());else load()}
-start();
+window.addEventListener("DOMContentLoaded", start);
 </script></body></html>
