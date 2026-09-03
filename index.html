@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shop Picks</title>
+<style>
+body{margin:0;font:16px Arial;background:#f7f7f8;color:#171717}.wrap{max-width:1100px;margin:auto;padding:20px}.hero{background:#111827;color:white;padding:45px 20px}.hero h1{font-size:42px;margin:30px 0 10px}.hero p{color:#ddd}.search{width:100%;padding:14px;border:1px solid #ddd;border-radius:10px;margin:20px 0;font-size:16px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}.card{background:white;border:1px solid #e5e7eb;border-radius:16px;overflow:hidden}.pic{height:220px;background:#f3f4f6;display:grid;place-items:center}.pic img{max-width:100%;max-height:100%;object-fit:contain}.body{padding:16px}.cat{font-size:11px;color:#777;text-transform:uppercase}.title{font-weight:bold;font-size:17px;margin:8px 0}.desc{font-size:13px;color:#666;min-height:42px}.btn{display:block;background:#ff9900;color:#111;text-decoration:none;text-align:center;font-weight:bold;padding:12px;border-radius:9px;margin-top:14px}.empty{text-align:center;grid-column:1/-1;padding:60px;color:#777}.notice{text-align:center;color:#777;font-size:12px;margin:35px}
+@media(max-width:900px){.grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.hero h1{font-size:32px}.grid{grid-template-columns:1fr}}
+</style></head><body>
+<div class="hero"><div class="wrap"><b id="brand">Shop Picks</b><h1>Recommended Products</h1><p>Products featured on our YouTube channel. Tap a product to see it on Amazon.</p></div></div>
+<main class="wrap"><input id="search" class="search" placeholder="Search products..."><section id="grid" class="grid"><div class="empty">Loading...</div></section>
+<p class="notice">As an Amazon Associate, we may earn from qualifying purchases. Product availability, pricing and details are determined by Amazon.</p></main>
+<script>
+const SUPABASE_URL="YOUR_SUPABASE_URL",SUPABASE_ANON_KEY="YOUR_SUPABASE_ANON_KEY";let products=[];
+const esc=s=>String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]));
+async function load(){if(SUPABASE_URL.startsWith("YOUR_")){grid.innerHTML='<div class="empty">Setup required: add your Supabase URL and anon key.</div>';return}
+let r=await fetch(SUPABASE_URL+"/rest/v1/products?select=*&order=created_at.desc",{headers:{apikey:SUPABASE_ANON_KEY,Authorization:"Bearer "+SUPABASE_ANON_KEY}});if(!r.ok){grid.innerHTML='<div class="empty">Unable to load products.</div>';return}products=await r.json();render()}
+function render(){let q=search.value.toLowerCase();let a=products.filter(p=>(p.name+" "+(p.category||"")+" "+(p.description||"")).toLowerCase().includes(q));grid.innerHTML=a.length?a.map(p=>'<article class="card"><div class="pic">'+(p.image_url?'<img src="'+esc(p.image_url)+'" alt="'+esc(p.name)+'">':'🛍️')+'</div><div class="body"><div class="cat">'+esc(p.category||"Product")+'</div><div class="title">'+esc(p.name)+'</div><div class="desc">'+esc(p.description||"")+'</div><a class="btn" href="'+esc(p.amazon_url)+'" target="_blank" rel="sponsored nofollow noopener">View on Amazon →</a></div></article>').join(""):'<div class="empty">No products found.</div>'}
+search.oninput=render;load();
+</script></body></html>
